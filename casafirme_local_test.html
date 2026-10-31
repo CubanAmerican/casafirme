@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CasaFirme — Prueba Local (Datos Reales)</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#0f1419; color:#e7e9ea; margin:0; padding:20px; }
+  .wrap { max-width:800px; margin:0 auto; }
+  h1 { text-align:center; }
+  .search { display:flex; gap:8px; margin:20px 0; }
+  input { flex:1; padding:12px; border-radius:8px; border:1px solid #38444d; background:#1a2332; color:white; }
+  button { padding:12px 20px; background:#1d9bf0; color:white; border:none; border-radius:8px; cursor:pointer; }
+  .result { background:#1a2332; padding:20px; border-radius:12px; margin-top:16px; }
+  .badge { display:inline-block; padding:4px 10px; border-radius:999px; margin:4px; font-size:.85rem; }
+  .ok { background:#00ba7c; color:#000; }
+  .danger { background:#f4212e; color:#fff; }
+  .warn { background:#ffad1f; color:#000; }
+  .note { color:#8b98a5; font-size:.85rem; }
+  pre { background:#0f1419; padding:12px; border-radius:8px; overflow:auto; font-size:.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CasaFirme — Prueba Local</h1>
+  <p style="text-align:center;color:#8b98a5;">Consulta datos reales del Property Appraiser de Miami-Dade.<br>Abre este archivo en tu navegador (doble clic).</p>
+
+  <div class="search">
+    <input id="q" type="text" placeholder="Dirección (ej: 440 NW 125 ST) o Folio" onkeypress="if(event.key==='Enter')buscar()">
+    <button onclick="buscar()">Buscar</button>
+  </div>
+
+  <div id="out"></div>
+
+  <p class="note" style="margin-top:40px;">
+    Fuente: gisweb.miamidade.gov (Parcels @ PaParcel).<br>
+    Solo funciona bien cuando se abre localmente o con proxy. En GitHub Pages puede fallar por CORS.
+  </p>
+</div>
+
+<script>
+const BASE = "https://gisweb.miamidade.gov/arcgis/rest/services/MD_LandInformation/MapServer/26/query";
+
+async function buscar() {
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+  document.getElementById('out').innerHTML = '<div class="result">Buscando...</div>';
+
+  let where = "";
+  if (/^\d/.test(q) && q.length > 8) {
+    const clean = q.replace(/-/g, '');
+    where = `FOLIO='${clean}' OR FOLIO='${q}'`;
+  } else {
+    where = `UPPER(TRUE_SITE_ADDR) LIKE UPPER('%${q.replace(/'/g, "''")}%')`;
+  }
+
+  const url = `${BASE}?where=${encodeURIComponent(where)}&outFields=FOLIO,TRUE_OWNER1,TRUE_OWNER2,TRUE_SITE_ADDR,TRUE_SITE_CITY,TRUE_SITE_ZIP_CODE,DOR_CODE_CUR,DOR_DESC,YEAR_BUILT,TOTAL_VAL_CUR&returnGeometry=false&f=json&resultRecordCount=5`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById('out').innerHTML = `<div class="result"><span class="badge danger">Error</span><p>${data.error.message || 'Consulta fallida'}</p><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+      return;
+    }
+
+    if (!data.features || data.features.length === 0) {
+      document.getElementById('out').innerHTML = `<div class="result"><span class="badge warn">Sin resultados</span><p>No se encontró nada para: <strong>${q}</strong></p><p class="note">Prueba con una dirección más corta o un folio de 13 dígitos.</p></div>`;
+      return;
+    }
+
+    let html = '';
+    data.features.forEach(f => {
+      const a = f.attributes;
+      const owner = (a.TRUE_OWNER1 || '') + (a.TRUE_OWNER2 ? ' / ' + a.TRUE_OWNER2 : '');
+      const isLLC = /llc|corp|inc|ltd|trust|company/i.test(owner);
+      html += `
+        <div class="result">
+          <h3>${a.TRUE_SITE_ADDR || 'Sin dirección'} — ${a.TRUE_SITE_CITY || ''}</h3>
+          <p><strong>Folio:</strong> ${a.FOLIO || '—'}</p>
+          <p><strong>Dueño:</strong> ${owner || '—'}</p>
+          <p><strong>Use Code (DOR):</strong> ${a.DOR_CODE_CUR || '—'} ${a.DOR_DESC || ''}</p>
+          <p><strong>Año construido:</strong> ${a.YEAR_BUILT || '—'}</p>
+          <p><strong>Valor total:</strong> ${a.TOTAL_VAL_CUR ? '$' + Number(a.TOTAL_VAL_CUR).toLocaleString() : '—'}</p>
+          ${isLLC ? '<span class="badge danger">LLC / Corp / Trust — no atendemos</span>' : '<span class="badge ok">Título personal (posible)</span>'}
+          <span class="badge warn">Homestead / School: revisar en miamidadepa.gov</span>
+        </div>`;
+    });
+    document.getElementById('out').innerHTML = html;
+  } catch (err) {
+    document.getElementById('out').innerHTML = `<div class="result"><span class="badge danger">Error de red / CORS</span><p>${err.message}</p><p class="note">Si estás en GitHub Pages, esto es normal. Abre este archivo localmente en tu laptop.</p></div>`;
+  }
+}
+</script>
+</body>
+</html>
