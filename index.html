@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CasaFirme — Miami-Dade</title>
+<style>
+  :root { --bg:#0f1419; --card:#1a2332; --text:#e7e9ea; --accent:#1d9bf0; --ok:#00ba7c; --warn:#ffad1f; --danger:#f4212e; }
+  body { font-family:system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); margin:0; line-height:1.5; }
+  .wrap { max-width:900px; margin:0 auto; padding:20px; }
+  header { text-align:center; padding:30px 0; }
+  h1 { margin:0; font-size:2.2rem; }
+  .sub { color:#8b98a5; }
+  .search { background:var(--card); padding:20px; border-radius:16px; margin:20px 0; display:flex; gap:8px; }
+  input { flex:1; padding:12px 16px; border-radius:8px; border:1px solid #38444d; background:#0f1419; color:var(--text); font-size:1rem; }
+  button { padding:12px 20px; border-radius:8px; border:none; background:var(--accent); color:white; font-size:1rem; cursor:pointer; }
+  .result { background:var(--card); padding:20px; border-radius:16px; margin-top:16px; }
+  .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:.85rem; margin:4px; }
+  .badge.ok { background:var(--ok); color:#000; }
+  .badge.warn { background:var(--warn); color:#000; }
+  .badge.danger { background:var(--danger); color:#fff; }
+  .menu { display:flex; gap:12px; flex-wrap:wrap; margin:30px 0; }
+  .menu a { background:var(--card); color:var(--text); padding:12px 18px; border-radius:12px; text-decoration:none; }
+  .menu a:hover { background:#2a3a4d; }
+  section { margin:40px 0; }
+  footer { text-align:center; color:#8b98a5; font-size:.85rem; margin-top:40px; }
+  .lang { float:right; }
+  .lang a { color:var(--accent); margin-left:8px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="lang"><a onclick="setLang('es')">ES</a> | <a onclick="setLang('en')">EN</a></div>
+    <h1>CasaFirme</h1>
+    <p class="sub" id="tagline">Busca si tu propiedad en Miami-Dade tiene casos de code enforcement, multas o liens. Gratis.</p>
+  </header>
+
+  <div class="search">
+    <input id="q" type="text" placeholder="Dirección o folio" onkeypress="if(event.key==='Enter')buscar()">
+    <button onclick="buscar()">Buscar</button>
+  </div>
+
+  <div id="out"></div>
+
+  <div class="menu">
+    <a href="#como">Cómo funciona</a>
+    <a href="#cartas">Cartas y recursos</a>
+    <a href="#coalicion">Coalición / Fondo</a>
+    <a href="#servicios">Servicios Arkiteko</a>
+    <a href="#contacto">Contacto</a>
+  </div>
+
+  <section id="como">
+    <h2>Cómo funciona el sistema</h2>
+    <p>Un aviso de code enforcement puede convertirse en multa y luego en lien si no se atiende a tiempo. El reloj de 20 días es crítico.</p>
+  </section>
+
+  <section id="cartas">
+    <h2>Cartas y recursos</h2>
+    <p>Modelos de cartas (Chapter 119, audiencia perdida, hardship, etc.) listos para usar.</p>
+  </section>
+
+  <section id="coalicion">
+    <h2>Coalición / Fondo de ancianos</h2>
+    <p>Para apoyar a personas mayores sin familia que enfrentan estos casos.</p>
+  </section>
+
+  <section id="servicios">
+    <h2>Servicios Arkiteko</h2>
+    <p>Cuando ya hay un caso confirmado: survey, ingeniería, arquitectura y GC.</p>
+  </section>
+
+  <section id="contacto">
+    <h2>Contacto</h2>
+    <p>Arkiteko — Miami</p>
+  </section>
+
+  <footer>
+    CasaFirme usa records públicos de Miami-Dade. No es asesoría legal. Información de orientación.
+  </footer>
+</div>
+
+<script>
+const texts = {
+  es: { tagline: "Busca si tu propiedad en Miami-Dade tiene casos de code enforcement, multas o liens. Gratis.", placeholder: "Dirección o folio", btn: "Buscar", demo: "Resultado de demostración" },
+  en: { tagline: "Check if your Miami-Dade property has code enforcement cases, fines or liens. Free.", placeholder: "Address or folio", btn: "Search", demo: "Demo result" }
+};
+let lang = 'es';
+function setLang(l) {
+  lang = l;
+  document.getElementById('tagline').textContent = texts[l].tagline;
+  document.getElementById('q').placeholder = texts[l].placeholder;
+  document.querySelector('button').textContent = texts[l].btn;
+}
+function buscar() {
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+  document.getElementById('out').innerHTML = `
+    <div class="result">
+      <h3>${texts[lang].demo}: ${q}</h3>
+      <p>Versión de demostración. En producción se conecta a los records públicos de Miami-Dade.</p>
+      <span class="badge ok">Homestead</span>
+      <span class="badge warn">Casos</span>
+      <span class="badge danger">Lien</span>
+    </div>`;
+}
+</script>
+</body>
+</html>
