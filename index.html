@@ -11,8 +11,9 @@
   header { text-align:center; padding:30px 0; }
   h1 { margin:0; font-size:2.2rem; }
   .sub { color:#8b98a5; }
-  .search { background:var(--card); padding:20px; border-radius:16px; margin:20px 0; display:flex; gap:8px; }
-  input { flex:1; padding:12px 16px; border-radius:8px; border:1px solid #38444d; background:#0f1419; color:var(--text); font-size:1rem; }
+  .search, .form-box { background:var(--card); padding:20px; border-radius:16px; margin:20px 0; }
+  .search { display:flex; gap:8px; }
+  input, select, textarea { width:100%; padding:12px 16px; border-radius:8px; border:1px solid #38444d; background:#0f1419; color:var(--text); font-size:1rem; margin:6px 0; }
   button { padding:12px 20px; border-radius:8px; border:none; background:var(--accent); color:white; font-size:1rem; cursor:pointer; }
   .result { background:var(--card); padding:20px; border-radius:16px; margin-top:16px; }
   .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:.85rem; margin:4px; }
@@ -26,6 +27,10 @@
   footer { text-align:center; color:#8b98a5; font-size:.85rem; margin-top:40px; }
   .lang { float:right; }
   .lang a { color:var(--accent); margin-left:8px; cursor:pointer; }
+  label { display:block; margin-top:10px; font-size:.9rem; }
+  .checkbox { display:flex; align-items:flex-start; gap:8px; margin:12px 0; }
+  .checkbox input { width:auto; margin-top:4px; }
+  .note { color:#8b98a5; font-size:.85rem; }
 </style>
 </head>
 <body>
@@ -33,7 +38,7 @@
   <header>
     <div class="lang"><a onclick="setLang('es')">ES</a> | <a onclick="setLang('en')">EN</a></div>
     <h1>CasaFirme</h1>
-    <p class="sub" id="tagline">Busca si tu propiedad en Miami-Dade tiene casos de code enforcement, multas o liens. Gratis.</p>
+    <p class="sub" id="tagline">Busca si tu propiedad en Miami-Dade tiene casos de code enforcement, multas o liens. Gratis. Solo propiedades a título personal (no LLC).</p>
   </header>
 
   <div class="search">
@@ -45,10 +50,9 @@
 
   <div class="menu">
     <a href="#como">Cómo funciona</a>
-    <a href="#cartas">Cartas y recursos</a>
-    <a href="#coalicion">Coalición / Fondo</a>
+    <a href="#clasificacion">Clasificación</a>
+    <a href="#lead">Pedir ayuda / Reporte</a>
     <a href="#servicios">Servicios Arkiteko</a>
-    <a href="#contacto">Contacto</a>
   </div>
 
   <section id="como">
@@ -56,53 +60,87 @@
     <p>Un aviso de code enforcement puede convertirse en multa y luego en lien si no se atiende a tiempo. El reloj de 20 días es crítico.</p>
   </section>
 
-  <section id="cartas">
-    <h2>Cartas y recursos</h2>
-    <p>Modelos de cartas (Chapter 119, audiencia perdida, hardship, etc.) listos para usar.</p>
+  <section id="clasificacion">
+    <h2>Clasificación de propiedad (solo título personal)</h2>
+    <p>CasaFirme solo atiende propiedades a nombre de personas naturales (no LLC, Corp o Trusts).</p>
+    <ul>
+      <li>Single-family / Duplex: prioridad alta (owner-occupied)</li>
+      <li>Triple+ / Multifamily: tratamiento comercial</li>
+      <li>Homestead + School vs Non-School: se detecta del record del Property Appraiser</li>
+    </ul>
+    <p class="note">En producción esto se llena automáticamente con los datos públicos.</p>
   </section>
 
-  <section id="coalicion">
-    <h2>Coalición / Fondo de ancianos</h2>
-    <p>Para apoyar a personas mayores sin familia que enfrentan estos casos.</p>
+  <section id="lead">
+    <h2>Pedir ayuda / Enviar reporte</h2>
+    <p>Si encontraste un caso y quieres que te contactemos, llena este formulario. El reporte llega a <strong>info@arkiteko.com</strong>.</p>
+    <div class="form-box">
+      <form action="https://formspree.io/f/your-form-id" method="POST" id="leadForm">
+        <label>Folio number *</label>
+        <input type="text" name="folio" required>
+
+        <label>Nombre del propietario *</label>
+        <input type="text" name="owner_name" required>
+
+        <label>Teléfono *</label>
+        <input type="tel" name="phone" required>
+
+        <label>Email *</label>
+        <input type="email" name="email" required>
+
+        <label>Dirección de la propiedad</label>
+        <input type="text" name="address">
+
+        <label>Notas / descripción del caso</label>
+        <textarea name="notes" rows="4"></textarea>
+
+        <div class="checkbox">
+          <input type="checkbox" id="legal" name="legal_ack" required>
+          <label for="legal">Declaro bajo pena de perjurio que soy el propietario o persona autorizada de esta propiedad, que la información es verdadera, y autorizo a Arkiteko a contactarme. Entiendo que esta no es asesoría legal. *</label>
+        </div>
+
+        <button type="submit">Enviar reporte a Arkiteko</button>
+        <p class="note">Al enviar se registra la solicitud. Para citas de 15 minutos usa el calendario más abajo (próximamente).</p>
+      </form>
+    </div>
   </section>
 
   <section id="servicios">
     <h2>Servicios Arkiteko</h2>
-    <p>Cuando ya hay un caso confirmado: survey, ingeniería, arquitectura y GC.</p>
-  </section>
-
-  <section id="contacto">
-    <h2>Contacto</h2>
-    <p>Arkiteko — Miami</p>
+    <p>Cuando hay un caso confirmado: survey, ingeniería, arquitectura y GC. Primera llamada de 15 minutos (lun–vie 9:00–17:00).</p>
+    <p class="note">Calendario de citas se integrará aquí (Cal.com o similar).</p>
   </section>
 
   <footer>
-    CasaFirme usa records públicos de Miami-Dade. No es asesoría legal. Información de orientación.
+    CasaFirme usa records públicos de Miami-Dade. No es asesoría legal. Información de orientación. Solo propiedades a título personal.
   </footer>
 </div>
 
 <script>
 const texts = {
-  es: { tagline: "Busca si tu propiedad en Miami-Dade tiene casos de code enforcement, multas o liens. Gratis.", placeholder: "Dirección o folio", btn: "Buscar", demo: "Resultado de demostración" },
-  en: { tagline: "Check if your Miami-Dade property has code enforcement cases, fines or liens. Free.", placeholder: "Address or folio", btn: "Search", demo: "Demo result" }
+  es: { tagline: "Busca si tu propiedad en Miami-Dade tiene casos de code enforcement, multas o liens. Gratis. Solo propiedades a título personal (no LLC).", placeholder: "Dirección o folio", btn: "Buscar", demo: "Resultado de demostración" },
+  en: { tagline: "Check if your Miami-Dade property has code enforcement cases, fines or liens. Free. Personal title only (no LLC).", placeholder: "Address or folio", btn: "Search", demo: "Demo result" }
 };
 let lang = 'es';
 function setLang(l) {
   lang = l;
   document.getElementById('tagline').textContent = texts[l].tagline;
   document.getElementById('q').placeholder = texts[l].placeholder;
-  document.querySelector('button').textContent = texts[l].btn;
+  document.querySelector('.search button').textContent = texts[l].btn;
 }
 function buscar() {
   const q = document.getElementById('q').value.trim();
   if (!q) return;
+  // Placeholder classification logic (will be replaced with real Property Appraiser data)
+  const isLLC = /llc|corp|inc|trust/i.test(q);
   document.getElementById('out').innerHTML = `
     <div class="result">
       <h3>${texts[lang].demo}: ${q}</h3>
-      <p>Versión de demostración. En producción se conecta a los records públicos de Miami-Dade.</p>
-      <span class="badge ok">Homestead</span>
-      <span class="badge warn">Casos</span>
-      <span class="badge danger">Lien</span>
+      <p>Versión de demostración. En producción se conecta a Property Appraiser + GIS.</p>
+      ${isLLC ? '<span class="badge danger">LLC / Corp detectado — no atendemos</span>' : '<span class="badge ok">Título personal (demo)</span>'}
+      <span class="badge warn">Homestead: revisar record</span>
+      <span class="badge warn">School vs Non-School: revisar record</span>
+      <p class="note">Solo se procesan propiedades a nombre de personas naturales.</p>
     </div>`;
 }
 </script>
