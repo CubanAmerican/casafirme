@@ -11,10 +11,11 @@
   header { text-align:center; padding:30px 0; }
   h1 { margin:0; font-size:2.2rem; }
   .sub { color:#8b98a5; }
-  .search, .form-box { background:var(--card); padding:20px; border-radius:16px; margin:20px 0; }
+  .search, .form-box, .report { background:var(--card); padding:20px; border-radius:16px; margin:20px 0; }
   .search { display:flex; gap:8px; }
-  input, select, textarea { width:100%; padding:12px 16px; border-radius:8px; border:1px solid #38444d; background:#0f1419; color:var(--text); font-size:1rem; margin:6px 0; }
+  input, select, textarea { width:100%; padding:12px 16px; border-radius:8px; border:1px solid #38444d; background:#0f1419; color:var(--text); font-size:1rem; margin:6px 0; box-sizing:border-box; }
   button { padding:12px 20px; border-radius:8px; border:none; background:var(--accent); color:white; font-size:1rem; cursor:pointer; }
+  button.secondary { background:#38444d; }
   .result { background:var(--card); padding:20px; border-radius:16px; margin-top:16px; }
   .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:.85rem; margin:4px; }
   .badge.ok { background:var(--ok); color:#000; }
@@ -31,36 +32,42 @@
   .checkbox { display:flex; align-items:flex-start; gap:8px; margin:12px 0; }
   .checkbox input { width:auto; margin-top:4px; }
   .note { color:#8b98a5; font-size:.85rem; }
+  .success { background:var(--ok); color:#000; padding:12px; border-radius:8px; margin:10px 0; display:none; }
+  @media print {
+    body { background:white; color:black; }
+    .no-print { display:none !important; }
+    .report { border:1px solid #ccc; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <header class="no-print">
     <div class="lang"><a onclick="setLang('es')">ES</a> | <a onclick="setLang('en')">EN</a></div>
     <h1>CasaFirme</h1>
     <p class="sub" id="tagline">Busca si tu propiedad en Miami-Dade tiene casos de code enforcement, multas o liens. Gratis. Solo propiedades a título personal (no LLC).</p>
   </header>
 
-  <div class="search">
+  <div class="search no-print">
     <input id="q" type="text" placeholder="Dirección o folio" onkeypress="if(event.key==='Enter')buscar()">
     <button onclick="buscar()">Buscar</button>
   </div>
 
   <div id="out"></div>
 
-  <div class="menu">
+  <div class="menu no-print">
     <a href="#como">Cómo funciona</a>
     <a href="#clasificacion">Clasificación</a>
     <a href="#lead">Pedir ayuda / Reporte</a>
     <a href="#servicios">Servicios Arkiteko</a>
   </div>
 
-  <section id="como">
+  <section id="como" class="no-print">
     <h2>Cómo funciona el sistema</h2>
     <p>Un aviso de code enforcement puede convertirse en multa y luego en lien si no se atiende a tiempo. El reloj de 20 días es crítico.</p>
   </section>
 
-  <section id="clasificacion">
+  <section id="clasificacion" class="no-print">
     <h2>Clasificación de propiedad (solo título personal)</h2>
     <p>CasaFirme solo atiende propiedades a nombre de personas naturales (no LLC, Corp o Trusts).</p>
     <ul>
@@ -72,46 +79,60 @@
   </section>
 
   <section id="lead">
-    <h2>Pedir ayuda / Enviar reporte</h2>
-    <p>Si encontraste un caso y quieres que te contactemos, llena este formulario. El reporte llega a <strong>info@arkiteko.com</strong>.</p>
-    <div class="form-box">
-      <form action="https://formspree.io/f/your-form-id" method="POST" id="leadForm">
+    <h2 class="no-print">Pedir ayuda / Enviar reporte</h2>
+    <p class="no-print">Si encontraste un caso y quieres que te contactemos, llena este formulario. El reporte llega a <strong>info@arkiteko.com</strong>.</p>
+    <div class="form-box no-print">
+      <div id="successMsg" class="success">Reporte preparado. Puedes imprimirlo o enviarlo. (En producción se envía automáticamente)</div>
+      <form id="leadForm" onsubmit="return handleSubmit(event)">
         <label>Folio number *</label>
-        <input type="text" name="folio" required>
+        <input type="text" name="folio" id="folio" required>
 
         <label>Nombre del propietario *</label>
-        <input type="text" name="owner_name" required>
+        <input type="text" name="owner_name" id="owner_name" required>
 
         <label>Teléfono *</label>
-        <input type="tel" name="phone" required>
+        <input type="tel" name="phone" id="phone" required>
 
         <label>Email *</label>
-        <input type="email" name="email" required>
+        <input type="email" name="email" id="email" required>
 
         <label>Dirección de la propiedad</label>
-        <input type="text" name="address">
+        <input type="text" name="address" id="address">
 
         <label>Notas / descripción del caso</label>
-        <textarea name="notes" rows="4"></textarea>
+        <textarea name="notes" id="notes" rows="4"></textarea>
 
         <div class="checkbox">
           <input type="checkbox" id="legal" name="legal_ack" required>
           <label for="legal">Declaro bajo pena de perjurio que soy el propietario o persona autorizada de esta propiedad, que la información es verdadera, y autorizo a Arkiteko a contactarme. Entiendo que esta no es asesoría legal. *</label>
         </div>
 
-        <button type="submit">Enviar reporte a Arkiteko</button>
-        <p class="note">Al enviar se registra la solicitud. Para citas de 15 minutos usa el calendario más abajo (próximamente).</p>
+        <button type="submit">Generar reporte</button>
+        <button type="button" class="secondary" onclick="window.print()">Imprimir / Guardar PDF</button>
       </form>
+    </div>
+
+    <div id="printableReport" class="report" style="display:none;">
+      <h2>Reporte CasaFirme — Arkiteko</h2>
+      <p><strong>Fecha:</strong> <span id="rDate"></span></p>
+      <p><strong>Folio:</strong> <span id="rFolio"></span></p>
+      <p><strong>Propietario:</strong> <span id="rOwner"></span></p>
+      <p><strong>Teléfono:</strong> <span id="rPhone"></span></p>
+      <p><strong>Email:</strong> <span id="rEmail"></span></p>
+      <p><strong>Dirección:</strong> <span id="rAddress"></span></p>
+      <p><strong>Notas:</strong> <span id="rNotes"></span></p>
+      <p><strong>Declaración:</strong> El solicitante declaró bajo pena de perjurio ser propietario o persona autorizada.</p>
+      <p class="note">Este reporte se envió / se enviará a info@arkiteko.com</p>
     </div>
   </section>
 
-  <section id="servicios">
+  <section id="servicios" class="no-print">
     <h2>Servicios Arkiteko</h2>
     <p>Cuando hay un caso confirmado: survey, ingeniería, arquitectura y GC. Primera llamada de 15 minutos (lun–vie 9:00–17:00).</p>
     <p class="note">Calendario de citas se integrará aquí (Cal.com o similar).</p>
   </section>
 
-  <footer>
+  <footer class="no-print">
     CasaFirme usa records públicos de Miami-Dade. No es asesoría legal. Información de orientación. Solo propiedades a título personal.
   </footer>
 </div>
@@ -131,10 +152,9 @@ function setLang(l) {
 function buscar() {
   const q = document.getElementById('q').value.trim();
   if (!q) return;
-  // Placeholder classification logic (will be replaced with real Property Appraiser data)
   const isLLC = /llc|corp|inc|trust/i.test(q);
   document.getElementById('out').innerHTML = `
-    <div class="result">
+    <div class="result no-print">
       <h3>${texts[lang].demo}: ${q}</h3>
       <p>Versión de demostración. En producción se conecta a Property Appraiser + GIS.</p>
       ${isLLC ? '<span class="badge danger">LLC / Corp detectado — no atendemos</span>' : '<span class="badge ok">Título personal (demo)</span>'}
@@ -142,6 +162,31 @@ function buscar() {
       <span class="badge warn">School vs Non-School: revisar record</span>
       <p class="note">Solo se procesan propiedades a nombre de personas naturales.</p>
     </div>`;
+}
+function handleSubmit(e) {
+  e.preventDefault();
+  const folio = document.getElementById('folio').value;
+  const owner = document.getElementById('owner_name').value;
+  const phone = document.getElementById('phone').value;
+  const email = document.getElementById('email').value;
+  const address = document.getElementById('address').value || '—';
+  const notes = document.getElementById('notes').value || '—';
+
+  document.getElementById('rDate').textContent = new Date().toLocaleString();
+  document.getElementById('rFolio').textContent = folio;
+  document.getElementById('rOwner').textContent = owner;
+  document.getElementById('rPhone').textContent = phone;
+  document.getElementById('rEmail').textContent = email;
+  document.getElementById('rAddress').textContent = address;
+  document.getElementById('rNotes').textContent = notes;
+
+  document.getElementById('printableReport').style.display = 'block';
+  document.getElementById('successMsg').style.display = 'block';
+  document.getElementById('leadForm').style.display = 'none';
+
+  // Scroll to report
+  document.getElementById('printableReport').scrollIntoView({behavior:'smooth'});
+  return false;
 }
 </script>
 </body>
