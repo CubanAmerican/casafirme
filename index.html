@@ -14,7 +14,7 @@
   .search, .form-box, .report { background:var(--card); padding:20px; border-radius:16px; margin:20px 0; }
   .search { display:flex; gap:8px; }
   input, select, textarea { width:100%; padding:12px 16px; border-radius:8px; border:1px solid #38444d; background:#0f1419; color:var(--text); font-size:1rem; margin:6px 0; box-sizing:border-box; }
-  button { padding:12px 20px; border-radius:8px; border:none; background:var(--accent); color:white; font-size:1rem; cursor:pointer; }
+  button, .btn { padding:12px 20px; border-radius:8px; border:none; background:var(--accent); color:white; font-size:1rem; cursor:pointer; text-decoration:none; display:inline-block; }
   button.secondary { background:#38444d; }
   .result { background:var(--card); padding:20px; border-radius:16px; margin-top:16px; }
   .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:.85rem; margin:4px; }
@@ -33,6 +33,7 @@
   .checkbox input { width:auto; margin-top:4px; }
   .note { color:#8b98a5; font-size:.85rem; }
   .success { background:var(--ok); color:#000; padding:12px; border-radius:8px; margin:10px 0; display:none; }
+  .contact-box { background:var(--card); padding:24px; border-radius:16px; text-align:center; }
   @media print {
     body { background:white; color:black; }
     .no-print { display:none !important; }
@@ -59,7 +60,7 @@
     <a href="#como">Cómo funciona</a>
     <a href="#clasificacion">Clasificación</a>
     <a href="#lead">Pedir ayuda / Reporte</a>
-    <a href="#servicios">Servicios Arkiteko</a>
+    <a href="#contacto">Contacto Arkiteko</a>
   </div>
 
   <section id="como" class="no-print">
@@ -126,14 +127,19 @@
     </div>
   </section>
 
-  <section id="servicios" class="no-print">
-    <h2>Servicios Arkiteko</h2>
-    <p>Cuando hay un caso confirmado: survey, ingeniería, arquitectura y GC. Primera llamada de 15 minutos (lun–vie 9:00–17:00).</p>
-    <p class="note">Calendario de citas se integrará aquí (Cal.com o similar).</p>
+  <section id="contacto" class="no-print">
+    <h2>Contacto Arkiteko</h2>
+    <div class="contact-box">
+      <p>Cuando tengas un caso confirmado o quieras que te ayudemos, escríbenos directamente:</p>
+      <p><strong>Email:</strong> info@arkiteko.com</p>
+      <p><a href="https://www.arkiteko.com/contact-us/" target="_blank" class="btn">Escribir a Arkiteko</a></p>
+      <p class="note">Primera llamada de 15 minutos (lunes a viernes, 9:00 AM – 5:00 PM).</p>
+    </div>
   </section>
 
   <footer class="no-print">
-    CasaFirme usa records públicos de Miami-Dade. No es asesoría legal. Información de orientación. Solo propiedades a título personal.
+    CasaFirme usa records públicos de Miami-Dade. No es asesoría legal. Información de orientación. Solo propiedades a título personal.<br>
+    <a href="https://www.arkiteko.com/contact-us/" target="_blank" style="color:var(--accent);">Contacto Arkiteko</a>
   </footer>
 </div>
 
@@ -184,7 +190,6 @@ function handleSubmit(e) {
   document.getElementById('successMsg').style.display = 'block';
   document.getElementById('leadForm').style.display = 'none';
 
-  // Scroll to report
   document.getElementById('printableReport').scrollIntoView({behavior:'smooth'});
   return false;
 }
