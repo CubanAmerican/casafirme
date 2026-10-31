@@ -17,6 +17,7 @@
   .danger { background:#f4212e; color:#fff; }
   .warn { background:#ffad1f; color:#000; }
   .note { color:#8b98a5; font-size:.85rem; }
+  a.btn { display:inline-block; margin-top:10px; padding:10px 16px; background:#1d9bf0; color:white; text-decoration:none; border-radius:8px; }
   pre { background:#0f1419; padding:12px; border-radius:8px; overflow:auto; font-size:.8rem; }
 </style>
 </head>
@@ -26,7 +27,7 @@
   <p style="text-align:center;color:#8b98a5;">Consulta datos reales del Property Appraiser de Miami-Dade.<br>Abre este archivo en tu navegador (doble clic).</p>
 
   <div class="search">
-    <input id="q" type="text" placeholder="Dirección (ej: 440 NW 125 ST) o Folio" onkeypress="if(event.key==='Enter')buscar()">
+    <input id="q" type="text" placeholder="Dirección (ej: 440 NW 125 ST) o Folio (con o sin guiones)" onkeypress="if(event.key==='Enter')buscar()">
     <button onclick="buscar()">Buscar</button>
   </div>
 
@@ -34,12 +35,22 @@
 
   <p class="note" style="margin-top:40px;">
     Fuente: gisweb.miamidade.gov (Parcels @ PaParcel).<br>
-    Solo funciona bien cuando se abre localmente o con proxy. En GitHub Pages puede fallar por CORS.
+    Funciona mejor abierto localmente. En sitios públicos puede fallar por CORS.
   </p>
 </div>
 
 <script>
 const BASE = "https://gisweb.miamidade.gov/arcgis/rest/services/MD_LandInformation/MapServer/26/query";
+
+function cleanFolio(f) {
+  return (f || '').replace(/[^0-9]/g, '');
+}
+
+function formatFolio(f) {
+  const c = cleanFolio(f);
+  if (c.length === 13) return c.slice(0,2)+'-'+c.slice(2,6)+'-'+c.slice(6,9)+'-'+c.slice(9);
+  return f;
+}
 
 async function buscar() {
   const q = document.getElementById('q').value.trim();
@@ -47,26 +58,29 @@ async function buscar() {
   document.getElementById('out').innerHTML = '<div class="result">Buscando...</div>';
 
   let where = "";
-  if (/^\d/.test(q) && q.length > 8) {
-    const clean = q.replace(/-/g, '');
-    where = `FOLIO='${clean}' OR FOLIO='${q}'`;
+  const isLikelyFolio = /^\d[\d\-]{8,}/.test(q);
+
+  if (isLikelyFolio) {
+    const clean = cleanFolio(q);
+    const formatted = formatFolio(clean);
+    where = `FOLIO='${clean}' OR FOLIO='${formatted}' OR FOLIO='${q}'`;
   } else {
     where = `UPPER(TRUE_SITE_ADDR) LIKE UPPER('%${q.replace(/'/g, "''")}%')`;
   }
 
-  const url = `${BASE}?where=${encodeURIComponent(where)}&outFields=FOLIO,TRUE_OWNER1,TRUE_OWNER2,TRUE_SITE_ADDR,TRUE_SITE_CITY,TRUE_SITE_ZIP_CODE,DOR_CODE_CUR,DOR_DESC,YEAR_BUILT,TOTAL_VAL_CUR&returnGeometry=false&f=json&resultRecordCount=5`;
+  const url = `${BASE}?where=${encodeURIComponent(where)}&outFields=FOLIO,TRUE_OWNER1,TRUE_OWNER2,TRUE_SITE_ADDR,TRUE_SITE_CITY,TRUE_SITE_ZIP_CODE,DOR_CODE_CUR,DOR_DESC,YEAR_BUILT,TOTAL_VAL_CUR&returnGeometry=false&f=json&resultRecordCount=8`;
 
   try {
     const res = await fetch(url);
     const data = await res.json();
 
     if (data.error) {
-      document.getElementById('out').innerHTML = `<div class="result"><span class="badge danger">Error</span><p>${data.error.message || 'Consulta fallida'}</p><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+      document.getElementById('out').innerHTML = `<div class="result"><span class="badge danger">Error</span><p>${data.error.message || 'Consulta fallida'}</p></div>`;
       return;
     }
 
     if (!data.features || data.features.length === 0) {
-      document.getElementById('out').innerHTML = `<div class="result"><span class="badge warn">Sin resultados</span><p>No se encontró nada para: <strong>${q}</strong></p><p class="note">Prueba con una dirección más corta o un folio de 13 dígitos.</p></div>`;
+      document.getElementById('out').innerHTML = `<div class="result"><span class="badge warn">Sin resultados</span><p>No se encontró nada para: <strong>${q}</strong></p><p class="note">Prueba con una dirección más corta o un folio de 13 dígitos (con o sin guiones).</p></div>`;
       return;
     }
 
@@ -75,21 +89,26 @@ async function buscar() {
       const a = f.attributes;
       const owner = (a.TRUE_OWNER1 || '') + (a.TRUE_OWNER2 ? ' / ' + a.TRUE_OWNER2 : '');
       const isLLC = /llc|corp|inc|ltd|trust|company/i.test(owner);
+      const folio = a.FOLIO || '';
+      const paLink = folio ? `https://www.miamidadepa.gov/pa/property_search.asp?searchtype=folio&searchvalue=${cleanFolio(folio)}` : '#';
+
       html += `
         <div class="result">
           <h3>${a.TRUE_SITE_ADDR || 'Sin dirección'} — ${a.TRUE_SITE_CITY || ''}</h3>
-          <p><strong>Folio:</strong> ${a.FOLIO || '—'}</p>
+          <p><strong>Folio:</strong> ${folio || '—'}</p>
           <p><strong>Dueño:</strong> ${owner || '—'}</p>
           <p><strong>Use Code (DOR):</strong> ${a.DOR_CODE_CUR || '—'} ${a.DOR_DESC || ''}</p>
           <p><strong>Año construido:</strong> ${a.YEAR_BUILT || '—'}</p>
           <p><strong>Valor total:</strong> ${a.TOTAL_VAL_CUR ? '$' + Number(a.TOTAL_VAL_CUR).toLocaleString() : '—'}</p>
           ${isLLC ? '<span class="badge danger">LLC / Corp / Trust — no atendemos</span>' : '<span class="badge ok">Título personal (posible)</span>'}
-          <span class="badge warn">Homestead / School: revisar en miamidadepa.gov</span>
+          <span class="badge warn">Homestead / School: ver en Property Appraiser</span>
+          <br>
+          <a class="btn" href="${paLink}" target="_blank">Ver en Property Appraiser (homestead, school, etc.)</a>
         </div>`;
     });
     document.getElementById('out').innerHTML = html;
   } catch (err) {
-    document.getElementById('out').innerHTML = `<div class="result"><span class="badge danger">Error de red / CORS</span><p>${err.message}</p><p class="note">Si estás en GitHub Pages, esto es normal. Abre este archivo localmente en tu laptop.</p></div>`;
+    document.getElementById('out').innerHTML = `<div class="result"><span class="badge danger">Error de red / CORS</span><p>${err.message}</p><p class="note">Abre este archivo localmente en tu laptop para mejores resultados.</p></div>`;
   }
 }
 </script>
